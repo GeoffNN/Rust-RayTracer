@@ -3,7 +3,7 @@ use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec::Vec3;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(
         &self,
         incoming_ray: &Ray,
@@ -39,6 +39,7 @@ impl Material for Lambertian {
 #[derive(Default)]
 pub struct Metal {
     albedo: Color,
+    //TODO(geoff): add fuzziness
 }
 
 impl Material for Metal {
@@ -55,6 +56,8 @@ impl Material for Metal {
         return true;
     }
 }
+
+// TODO(geoff): Add dielectric material
 
 pub const MATERIAL_CONCRETE: Lambertian = Lambertian {
     albedo: Color::new_const(0.5, 0.5, 0.5),

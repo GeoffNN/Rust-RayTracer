@@ -2,9 +2,11 @@ use crate::color::{write_color, Color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
+use crate::utils;
 use crate::vec::{Point3, Vec3};
 use rand::Rng;
 
+use rayon::prelude::*;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
@@ -13,6 +15,7 @@ pub struct Camera {
     pub image_width: i32,
     pub num_samples_per_pixel: i32,
     pub max_depth: i32,
+    pub vfov: f64,
 
     image_height: i32,
     center: Point3,
@@ -29,6 +32,7 @@ impl Default for Camera {
             image_height: 100,
             num_samples_per_pixel: 100,
             max_depth: 10,
+            vfov: 90.0,
             center: Point3::new(0., 0., 0.),
             pixel_delta_u: Vec3::new(0., 0., 0.),
             pixel_delta_v: Vec3::new(0., 0., 0.),
@@ -47,7 +51,9 @@ impl Camera {
 
         let focal_length = 1.;
 
-        let viewport_height = 2.0;
+        let theta = utils::degrees_to_radians(self.vfov);
+        let h = (0.5 * theta).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = (self.image_width as f64 / self.image_height as f64) * viewport_height;
 
         self.center = Point3::new(0.0, 0.0, 0.0);
@@ -127,18 +133,29 @@ impl Camera {
             ))
             .unwrap();
 
-        // TODO(geoff): use a thread pool to parallelize each pixel computation
-        for y in 0..self.image_height {
-            // Flush stdout to update the same line in the terminal
-            for x in 0..self.image_width {
-                let mut color = Color::default();
-                for _ in 0..self.num_samples_per_pixel {
-                    let ray = self.get_ray(x, y);
-                    color += self.ray_color(&ray, world, self.max_depth);
+        // Collect pixel colors in parallel
+        let pixel_colors: Vec<Vec<Color>> = (0..self.image_height)
+            .into_par_iter()
+            .map(|y| {
+                let mut row_colors = Vec::new();
+                for x in 0..self.image_width {
+                    let mut color = Color::default();
+                    for _ in 0..self.num_samples_per_pixel {
+                        let ray = self.get_ray(x, y);
+                        color += self.ray_color(&ray, world, self.max_depth);
+                    }
+                    row_colors.push(color);
                 }
+                row_colors
+            })
+            .collect();
+        // Write pixel colors in the correct order
+        for row in pixel_colors {
+            for color in row {
                 write_color(&mut writer, &color, self.num_samples_per_pixel).unwrap();
             }
         }
+
         writer.flush().unwrap();
     }
 }
