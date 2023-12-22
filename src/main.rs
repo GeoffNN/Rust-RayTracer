@@ -15,6 +15,8 @@ fn main() {
     camera.num_samples_per_pixel = 100;
     camera.max_depth = 50;
     camera.vfov = 90.0;
+    camera.lookfrom = Point3::new(-3., 3., 1.);
+    camera.lookat = Point3::new(0., 0., -1.);
 
     // TODO(geoff): Take this from a config file
 
