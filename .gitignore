@@ -1,3 +1,5 @@
 *.ppm
 target/*
 .cargo
+.replit
+replit.nix
