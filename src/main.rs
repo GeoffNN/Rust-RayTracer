@@ -13,7 +13,7 @@ fn initial_main() {
 }
 
 fn main() {
-    let image_path = "raytracing_level_0.ppm";
+    let image_path = "raytracing_level_2.ppm";
 
     // Image
     let aspect_ratio: f64 = 16.0 / 9.0;
@@ -25,7 +25,7 @@ fn main() {
     // Camera
     let focal_length = 1.;
     let viewport_height = 2.0;
-    let viewport_width = (image_height as f64 / image_width as f64) * viewport_height;
+    let viewport_width = (image_width as f64 / image_height as f64) * viewport_height;
 
     let camera_center = Point3::new(0.0, 0.0, 0.0);
 
