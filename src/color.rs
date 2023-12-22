@@ -4,10 +4,20 @@ use std::io::{BufWriter, Write};
 
 pub type Color = Vec3;
 
+impl Color {
+    pub const fn new_const(r: f64, g: f64, b: f64) -> Color {
+        Self { x: r, y: g, z: b }
+    }
+}
+
 const INTENSITY_INTERVAL: Interval = Interval {
     lower: 0.0,
     upper: 256.0,
 };
+
+pub fn linear_to_gamma(x: f64) -> f64 {
+    x.sqrt()
+}
 
 pub fn write_color<W: Write>(
     mut writer: &mut BufWriter<W>,
@@ -16,9 +26,13 @@ pub fn write_color<W: Write>(
 ) -> Result<(), std::io::Error> {
     let scale = 1.0 / n_samples_per_pixel as f64;
 
-    let r = INTENSITY_INTERVAL.clamp(256.0 * pixel.x * scale).round() as u8;
-    let g = INTENSITY_INTERVAL.clamp(256.0 * pixel.y * scale).round() as u8;
-    let b = INTENSITY_INTERVAL.clamp(256.0 * pixel.z * scale).round() as u8;
+    let r = linear_to_gamma(pixel.x() * scale);
+    let g = linear_to_gamma(pixel.y() * scale);
+    let b = linear_to_gamma(pixel.z() * scale);
+
+    let r = INTENSITY_INTERVAL.clamp(256.0 * r).round() as u8;
+    let g = INTENSITY_INTERVAL.clamp(256.0 * g).round() as u8;
+    let b = INTENSITY_INTERVAL.clamp(256.0 * b).round() as u8;
 
     writeln!(&mut writer, "{} {} {}", r, g, b)
 }

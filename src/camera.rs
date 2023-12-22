@@ -66,23 +66,29 @@ impl Camera {
             viewport_upper_left_corner + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 
-    fn ray_color(&self, ray: &Ray, world: &dyn Hittable, max_depth: i32) -> Color {
-        if max_depth == 0 {
+    fn ray_color(&self, ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
+        if depth <= 0 {
             // return black
             return Color::new(0.0, 0.0, 0.0);
         }
         let mut hit_record: HitRecord = HitRecord::default();
         // Color using the normal vector
-        if world.hit(ray, Interval::new(0., f64::INFINITY), &mut hit_record) {
-            let bounce_direction: Vec3 = Vec3::random_in_hemisphere(hit_record.normal);
-            return 0.5
-                * self.ray_color(
-                    &Ray::new(hit_record.p, bounce_direction),
-                    world,
-                    max_depth - 1,
-                );
-            //return 0.5 * (hit_record.normal + Color::new(1., 1., 1.));
+        if world.hit(ray, Interval::new(0.001, f64::INFINITY), &mut hit_record) {
+            let mut attenuation = Color::default();
+            let mut scattered_ray = Ray::default();
+            if hit_record
+                .material
+                .scatter(ray, &hit_record, &mut attenuation, &mut scattered_ray)
+            {
+                let bounce_direction = scattered_ray.direction;
+                return attenuation
+                    * self.ray_color(&Ray::new(hit_record.p, bounce_direction), world, depth - 1);
+            }
+            // If no scatter than return black
+            return Color::new(0.0, 0.0, 0.0);
         }
+
+        // Background color
         let unit_direction = ray.direction.normalize();
         let a = 0.5 * (unit_direction.y + 1.0);
         return (1. - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0);

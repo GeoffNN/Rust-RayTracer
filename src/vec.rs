@@ -13,6 +13,25 @@ impl Vec3 {
         Vec3 { x, y, z }
     }
 
+    pub fn x(&self) -> f64 {
+        self.x
+    }
+    pub fn y(&self) -> f64 {
+        self.y
+    }
+    pub fn z(&self) -> f64 {
+        self.z
+    }
+
+    pub fn close_to_with_tol(self, other: Vec3, tol: f64) -> bool {
+        (self - other).length_squared() < tol.powi(2)
+    }
+
+    pub fn close_to(self, other: Vec3) -> bool {
+        let tol = 1e-8;
+        self.close_to_with_tol(other, tol)
+    }
+
     pub fn random() -> Vec3 {
         let mut rng = rand::thread_rng();
         Vec3::new(rng.gen(), rng.gen(), rng.gen())
@@ -73,6 +92,10 @@ impl Vec3 {
         let len = self.length();
         return *self / len;
     }
+
+    pub fn reflect(&self, normal: &Vec3) -> Vec3 {
+        *self - 2. * self.dot(normal) * (*normal)
+    }
 }
 
 impl Add for Vec3 {
@@ -122,6 +145,17 @@ impl Neg for Vec3 {
             y: -self.y,
             z: -self.z,
         };
+    }
+}
+
+impl Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+    fn mul(self, other: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x * other.x,
+            y: self.y * other.y,
+            z: self.z * other.z,
+        }
     }
 }
 

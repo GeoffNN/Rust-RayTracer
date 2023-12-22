@@ -1,15 +1,17 @@
 use crate::color::Color;
 use crate::interval::Interval;
+use crate::material::{Material, MATERIAL_CONCRETE};
 use crate::ray::Ray;
 use crate::vec::{Point3, Vec3};
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f64,
     pub color: Color,
     pub front_face: bool,
+    pub material: &'static dyn Material,
 }
 
 impl HitRecord {
@@ -21,6 +23,19 @@ impl HitRecord {
         } else {
             -outward_normal
         };
+    }
+}
+
+impl Default for HitRecord {
+    fn default() -> Self {
+        HitRecord {
+            p: Point3::default(),
+            normal: Vec3::default(),
+            t: 0.0,
+            color: Color::default(),
+            front_face: true,
+            material: &MATERIAL_CONCRETE,
+        }
     }
 }
 
