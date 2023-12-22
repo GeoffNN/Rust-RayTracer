@@ -1,6 +1,6 @@
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -61,6 +61,17 @@ impl Sub for Vec3 {
     }
 }
 
+impl Neg for Vec3 {
+    type Output = Vec3;
+    fn neg(self) -> Vec3 {
+        return Vec3 {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        };
+    }
+}
+
 impl Mul<f64> for Vec3 {
     type Output = Vec3;
     fn mul(self, other: f64) -> Vec3 {
@@ -115,6 +126,13 @@ mod tests {
         let b = Vec3::new(1.0, 2.0, 3.0);
         let result = a - b;
         assert_eq!(result, Vec3::new(4.0, 5.0, 6.0));
+    }
+
+    #[test]
+    fn test_vector_negation() {
+        let a = Vec3::new(1.0, -2.0, 3.0);
+        let result = -a;
+        assert_eq!(result, Vec3::new(-1.0, 2.0, -3.0));
     }
 
     #[test]
@@ -182,5 +200,24 @@ mod tests {
         let a = Vec3::new(1.0, 2.0, 3.0);
         let result = a.normalize();
         assert_eq!(result.length(), 1.0);
+    }
+
+    #[test]
+    fn test_cross_product_orthogonality() {
+        let a = Vec3::new(1.0, 0.0, 0.0);
+        let b = Vec3::new(0.0, 1.0, 0.0);
+        let result = a.cross(&b);
+        assert_eq!(result, Vec3::new(0.0, 0.0, 1.0));
+        let dot_with_a = result.dot(&a);
+        let dot_with_b = result.dot(&b);
+        assert!(dot_with_a.abs() < std::f64::EPSILON && dot_with_b.abs() < std::f64::EPSILON);
+    }
+    #[test]
+    fn test_cross_product_anticommutativity() {
+        let a = Vec3::new(1.0, 2.0, 3.0);
+        let b = Vec3::new(4.0, 5.0, 6.0);
+        let result_ab = a.cross(&b);
+        let result_ba = b.cross(&a);
+        assert_eq!(result_ab, -result_ba);
     }
 }

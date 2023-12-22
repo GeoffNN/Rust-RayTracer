@@ -1,1 +1,0 @@
-/home/runner/ComputationalEerdekens/target/debug/libeerdekens_bot.rlib: /home/runner/ComputationalEerdekens/src/color.rs /home/runner/ComputationalEerdekens/src/lib.rs /home/runner/ComputationalEerdekens/src/vec.rs
