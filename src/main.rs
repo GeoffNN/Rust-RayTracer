@@ -5,12 +5,13 @@ use eerdekens_bot::vec::Point3;
 use eerdekens_bot::camera::Camera;
 
 fn main() {
-    let image_path = "raytracing_level_4.ppm";
+    let image_path = "raytracing_level_5.ppm";
 
     // Camera
     let mut camera = Camera::default();
     camera.aspect_ratio = 16.0 / 9.0;
     camera.image_width = 400;
+    camera.num_samples_per_pixel = 100;
 
     // World
     let mut world = HittableList::new();

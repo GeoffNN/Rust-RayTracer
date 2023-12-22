@@ -3,6 +3,7 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec::{Point3, Vec3};
+use rand::Rng;
 
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -10,6 +11,7 @@ use std::io::{BufWriter, Write};
 pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: i32,
+    pub num_samples_per_pixel: i32,
 
     image_height: i32,
     center: Point3,
@@ -24,6 +26,7 @@ impl Default for Camera {
             aspect_ratio: 1.0,
             image_width: 100,
             image_height: 100,
+            num_samples_per_pixel: 100,
             center: Point3::new(0., 0., 0.),
             pixel_delta_u: Vec3::new(0., 0., 0.),
             pixel_delta_v: Vec3::new(0., 0., 0.),
@@ -72,12 +75,31 @@ impl Camera {
         return (1. - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0);
     }
 
+    fn get_ray(&self, x: i32, y: i32) -> Ray {
+        let mut pixel_center =
+            self.pixel00_location + x as f64 * self.pixel_delta_u + y as f64 * self.pixel_delta_v;
+
+        pixel_center += self.sample_pixel_from_square();
+        let ray_direction = pixel_center - self.center;
+        let ray = Ray::new(self.center, ray_direction);
+        return ray;
+    }
+
+    fn sample_pixel_from_square(&self) -> Vec3 {
+        let mut rng = rand::thread_rng();
+        let x = rng.gen_range(-0.5..0.5);
+        let y = rng.gen_range(-0.5..0.5);
+
+        return x * self.pixel_delta_u + y * self.pixel_delta_v;
+    }
+
     pub fn render(&mut self, world: &dyn Hittable, image_path: &str) {
         self.initialize();
         // Write to a file
         let file = File::create(image_path).unwrap();
         let mut writer = BufWriter::new(file);
 
+        // TODO(geoff): output a better format, like png or jpg
         // Write the header
         writer
             .write_fmt(format_args!(
@@ -89,15 +111,14 @@ impl Camera {
         for y in 0..self.image_height {
             // Flush stdout to update the same line in the terminal
             for x in 0..self.image_width {
-                let pixel_center = self.pixel00_location
-                    + x as f64 * self.pixel_delta_u
-                    + y as f64 * self.pixel_delta_v;
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
-                let color = self.ray_color(&ray, world);
-                write_color(&mut writer, &color).unwrap();
+                let mut color = Color::default();
+                for _ in 0..self.num_samples_per_pixel {
+                    let ray = self.get_ray(x, y);
+                    color += self.ray_color(&ray, world);
+                }
+                write_color(&mut writer, &color, self.num_samples_per_pixel).unwrap();
             }
         }
-        writer.flush();
+        writer.flush().unwrap();
     }
 }
