@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -10,6 +11,42 @@ pub struct Vec3 {
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x, y, z }
+    }
+
+    pub fn random() -> Vec3 {
+        let mut rng = rand::thread_rng();
+        Vec3::new(rng.gen(), rng.gen(), rng.gen())
+    }
+
+    pub fn random_in_bounds(lower: f64, upper: f64) -> Vec3 {
+        let mut rng = rand::thread_rng();
+        Vec3::new(
+            rng.gen_range(lower..upper),
+            rng.gen_range(lower..upper),
+            rng.gen_range(lower..upper),
+        )
+    }
+
+    pub fn random_in_unit_ball() -> Vec3 {
+        loop {
+            let candidate = Vec3::random_in_bounds(-1., 1.);
+            if candidate.length_squared() < 1. {
+                return candidate;
+            }
+        }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        Vec3::random_in_unit_ball().normalize()
+    }
+
+    pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+        let in_unit_sphere = Vec3::random_in_unit_ball();
+        if in_unit_sphere.dot(&normal) > 0. {
+            in_unit_sphere
+        } else {
+            -in_unit_sphere
+        }
     }
 
     pub fn dot(&self, other: &Vec3) -> f64 {

@@ -32,6 +32,6 @@ mod tests {
         let pixel = Color::new(255.0, 255.0, 255.0);
         let file = File::create("test_file.ppm").unwrap();
         let mut writer = BufWriter::new(file);
-        write_color(&mut writer, &pixel).unwrap();
+        write_color(&mut writer, &pixel, 1).unwrap();
     }
 }

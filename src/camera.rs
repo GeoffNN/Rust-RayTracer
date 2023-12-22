@@ -12,6 +12,7 @@ pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: i32,
     pub num_samples_per_pixel: i32,
+    pub max_depth: i32,
 
     image_height: i32,
     center: Point3,
@@ -27,6 +28,7 @@ impl Default for Camera {
             image_width: 100,
             image_height: 100,
             num_samples_per_pixel: 100,
+            max_depth: 10,
             center: Point3::new(0., 0., 0.),
             pixel_delta_u: Vec3::new(0., 0., 0.),
             pixel_delta_v: Vec3::new(0., 0., 0.),
@@ -64,11 +66,22 @@ impl Camera {
             viewport_upper_left_corner + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
     }
 
-    fn ray_color(&self, ray: &Ray, world: &dyn Hittable) -> Color {
+    fn ray_color(&self, ray: &Ray, world: &dyn Hittable, max_depth: i32) -> Color {
+        if max_depth == 0 {
+            // return black
+            return Color::new(0.0, 0.0, 0.0);
+        }
         let mut hit_record: HitRecord = HitRecord::default();
         // Color using the normal vector
         if world.hit(ray, Interval::new(0., f64::INFINITY), &mut hit_record) {
-            return 0.5 * (hit_record.normal + Color::new(1., 1., 1.));
+            let bounce_direction: Vec3 = Vec3::random_in_hemisphere(hit_record.normal);
+            return 0.5
+                * self.ray_color(
+                    &Ray::new(hit_record.p, bounce_direction),
+                    world,
+                    max_depth - 1,
+                );
+            //return 0.5 * (hit_record.normal + Color::new(1., 1., 1.));
         }
         let unit_direction = ray.direction.normalize();
         let a = 0.5 * (unit_direction.y + 1.0);
@@ -108,13 +121,14 @@ impl Camera {
             ))
             .unwrap();
 
+        // TODO(geoff): use a thread pool to parallelize each pixel computation
         for y in 0..self.image_height {
             // Flush stdout to update the same line in the terminal
             for x in 0..self.image_width {
                 let mut color = Color::default();
                 for _ in 0..self.num_samples_per_pixel {
                     let ray = self.get_ray(x, y);
-                    color += self.ray_color(&ray, world);
+                    color += self.ray_color(&ray, world, self.max_depth);
                 }
                 write_color(&mut writer, &color, self.num_samples_per_pixel).unwrap();
             }
