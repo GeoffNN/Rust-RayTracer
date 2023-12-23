@@ -8,6 +8,22 @@ impl Color {
     pub const fn new_const(r: f64, g: f64, b: f64) -> Color {
         Self { x: r, y: g, z: b }
     }
+
+    pub fn to_array(&self) -> [f64; 3] {
+        [self.x, self.y, self.z]
+    }
+
+    pub fn from_slice(slice: &[f64]) -> Color {
+        Color {
+            x: slice[0],
+            y: slice[1],
+            z: slice[2],
+        }
+    }
+
+    pub const fn black() -> Color {
+        Self::new_const(0.0, 0.0, 0.0)
+    }
 }
 
 const INTENSITY_INTERVAL: Interval = Interval {

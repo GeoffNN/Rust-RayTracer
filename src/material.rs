@@ -21,7 +21,7 @@ pub struct Lambertian {
 impl Material for Lambertian {
     fn scatter(
         &self,
-        incoming_ray: &Ray,
+        _incoming_ray: &Ray,
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered_ray: &mut Ray,

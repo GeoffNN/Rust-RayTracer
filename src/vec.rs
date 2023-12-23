@@ -76,8 +76,7 @@ impl Vec3 {
         }
     }
 
-    pub fn random_in_unit_disk() -> Vec3 {
-        let mut rng = rand::thread_rng();
+    pub fn random_in_unit_disk(rng: &mut rand::rngs::ThreadRng) -> Vec3 {
         loop {
             let candidate = Vec3::new(rng.gen_range(-1.0..1.), rng.gen_range(-1.0..1.), 0.);
             if candidate.length_squared() < 1. {

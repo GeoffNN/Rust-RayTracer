@@ -12,7 +12,7 @@ use std::io::{BufWriter, Write};
 
 pub struct Camera {
     pub aspect_ratio: f64,
-    pub image_width: i32,
+    pub image_width: usize,
     pub num_samples_per_pixel: i32,
     pub max_depth: i32,
     pub vfov: f64,
@@ -22,7 +22,7 @@ pub struct Camera {
     pub defocus_angle: f64,
     pub focus_dist: f64,
 
-    image_height: i32,
+    image_height: usize,
     center: Point3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
@@ -73,7 +73,7 @@ impl Camera {
     fn initialize(&mut self) {
         // Camera
 
-        self.image_height = ((self.image_width as f64 / self.aspect_ratio) as i32).max(1);
+        self.image_height = ((self.image_width as f64 / self.aspect_ratio) as usize).max(1);
 
         let theta = utils::degrees_to_radians(self.vfov);
         let h = (0.5 * theta).tan();
@@ -107,8 +107,8 @@ impl Camera {
         self.defocus_disk_v = self.v * defocus_radius;
     }
 
-    fn sample_from_defocus_disk(&self) -> Vec3 {
-        let p = Vec3::random_in_unit_disk();
+    fn sample_from_defocus_disk(&self, rng: &mut rand::rngs::ThreadRng) -> Vec3 {
+        let p = Vec3::random_in_unit_disk(rng);
         return self.center + p.x() * self.defocus_disk_u + p.y() * self.defocus_disk_v;
     }
 
@@ -138,40 +138,39 @@ impl Camera {
         return (1. - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0);
     }
 
-    fn get_ray(&self, x: i32, y: i32) -> Ray {
+    fn get_ray(&self, x: usize, y: usize, rng: &mut rand::rngs::ThreadRng) -> Ray {
         let mut pixel_center =
             self.pixel00_location + x as f64 * self.pixel_delta_u + y as f64 * self.pixel_delta_v;
 
-        pixel_center += self.sample_pixel_from_square();
+        pixel_center += self.sample_pixel_from_square(rng);
         let ray_origin = if self.defocus_angle <= 0. {
             self.center
         } else {
-            self.sample_from_defocus_disk()
+            self.sample_from_defocus_disk(rng)
         };
         let ray_direction = pixel_center - ray_origin;
         let ray = Ray::new(self.center, ray_direction);
         return ray;
     }
 
-    fn sample_pixel_from_square(&self) -> Vec3 {
-        let mut rng = rand::thread_rng();
+    fn sample_pixel_from_square(&self, rng: &mut rand::rngs::ThreadRng) -> Vec3 {
         let x = rng.gen_range(-0.5..0.5);
         let y = rng.gen_range(-0.5..0.5);
 
         return x * self.pixel_delta_u + y * self.pixel_delta_v;
     }
 
-    fn render_line(&self, world: &dyn Hittable, image_path: &str, row_idx: i32) -> Vec<Color> {
-        let mut row_colors = Vec::new();
+    fn render_line(&self, world: &dyn Hittable, row_idx: usize, row: &mut [f64]) {
+        let mut rng = rand::thread_rng();
+
         for x in 0..self.image_width {
             let mut color = Color::default();
             for _ in 0..self.num_samples_per_pixel {
-                let ray = self.get_ray(x, row_idx);
+                let ray = self.get_ray(x, row_idx, &mut rng);
                 color += self.ray_color(&ray, world, self.max_depth);
             }
-            row_colors.push(color);
+            row[3 * x..3 * (x + 1)].copy_from_slice(&color.to_array());
         }
-        row_colors
     }
 
     pub fn render(&mut self, world: &dyn Hittable, image_path: &str) {
@@ -190,13 +189,20 @@ impl Camera {
             .unwrap();
 
         // Collect pixel colors in parallel
-        let pixel_colors: Vec<Vec<Color>> = (0..self.image_height)
-            .into_par_iter()
-            .map(|y| self.render_line(world, &image_path, y))
+        let mut flat_image = vec![0.; self.image_width * self.image_height * 3];
+        let rows: Vec<(usize, &mut [f64])> = flat_image
+            .chunks_mut(self.image_width * 3)
+            .enumerate()
             .collect();
+
+        rows.into_par_iter()
+            .for_each(|(y, row)| self.render_line(world, y, row));
+
         // Write pixel colors in the correct order
-        for row in pixel_colors {
-            for color in row {
+        for y in 0..self.image_height {
+            let row = &flat_image[y * self.image_width * 3..(y + 1) * self.image_width * 3];
+            for x in 0..self.image_width {
+                let color = Color::from_slice(&row[3 * x..3 * (x + 1)]);
                 write_color(&mut writer, &color, self.num_samples_per_pixel).unwrap();
             }
         }
