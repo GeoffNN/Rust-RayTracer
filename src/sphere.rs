@@ -32,11 +32,12 @@ impl Hittable for Sphere {
         if discriminant < 0.0 {
             return false;
         }
+        let discriminant_sqrt = discriminant.sqrt();
         // Check first root
-        let t = (-half_b - discriminant.sqrt()) / a;
+        let mut t = (-half_b - discriminant_sqrt) / a;
         if !ray_t.surrounds(t) {
             // Check second root
-            let t = (-half_b + discriminant.sqrt()) / a;
+            t = (-half_b + discriminant_sqrt) / a;
             if !ray_t.surrounds(t) {
                 return false;
             }
