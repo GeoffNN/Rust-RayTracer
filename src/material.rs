@@ -16,9 +16,7 @@ pub trait Material: Send + Sync {
         rng: &mut rand::rngs::ThreadRng,
         incoming_ray: &Ray,
         rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered_ray: &mut Ray,
-    ) -> bool;
+    ) -> Option<(Color, Ray)>;
 }
 
 #[derive(Default)]
@@ -32,16 +30,14 @@ impl Material for Lambertian {
         rng: &mut rand::rngs::ThreadRng,
         _incoming_ray: &Ray,
         rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered_ray: &mut Ray,
-    ) -> bool {
+    ) -> Option<(Color, Ray)> {
         let mut scatter_direction: Vec3 = rec.normal + Vec3::random_unit_vector(rng);
         if scatter_direction.close_to(Vec3::zeros()) {
             scatter_direction = rec.normal;
         }
-        *scattered_ray = Ray::new(rec.p, scatter_direction);
-        *attenuation = self.albedo;
-        return true;
+        let scattered_ray = Ray::new(rec.p, scatter_direction);
+        let attenuation = self.albedo;
+        return Some((attenuation, scattered_ray));
     }
 }
 
@@ -57,13 +53,11 @@ impl Material for Metal {
         mut _rng: &mut rand::rngs::ThreadRng,
         incoming_ray: &Ray,
         rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered_ray: &mut Ray,
-    ) -> bool {
+    ) -> Option<(Color, Ray)> {
         let reflected = incoming_ray.direction.reflect(&rec.normal);
-        *scattered_ray = Ray::new(rec.p, reflected);
-        *attenuation = self.albedo;
-        return true;
+        let scattered_ray = Ray::new(rec.p, reflected);
+        let attenuation = self.albedo;
+        return Some((attenuation, scattered_ray));
     }
 }
 
