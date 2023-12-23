@@ -5,6 +5,11 @@ use crate::vec::Vec3;
 
 use rand::Rng;
 
+pub enum MaterialType {
+    Lambertian,
+    Metal,
+}
+
 pub trait Material: Send + Sync {
     fn scatter(
         &self,
@@ -79,7 +84,9 @@ pub static MATERIAL_SILVER: Metal = Metal {
 pub static MATERIAL_RED_PLASTIC: Lambertian = Lambertian {
     albedo: Color::new_const(0.9, 0.1, 0.1),
 };
+
 pub static MATERIALS: [&'static dyn Material; 5] = [
+    // Hand defined
     &MATERIAL_CONCRETE,
     &MATERIAL_GROUND,
     &MATERIAL_COPPER,
@@ -87,7 +94,28 @@ pub static MATERIALS: [&'static dyn Material; 5] = [
     &MATERIAL_RED_PLASTIC,
 ];
 
-pub fn random_material(rng: &mut rand::rngs::ThreadRng) -> &'static dyn Material {
+pub fn random_material_from_presets(rng: &mut rand::rngs::ThreadRng) -> &'static dyn Material {
     let material_index = rng.gen_range(0..MATERIALS.len());
     MATERIALS[material_index]
+}
+
+fn random_material_type(rng: &mut rand::rngs::ThreadRng) -> MaterialType {
+    let material_type_index = rng.gen_range(0..2);
+    match material_type_index {
+        0 => MaterialType::Lambertian,
+        1 => MaterialType::Metal,
+        _ => panic!("Invalid material type index"),
+    }
+}
+
+pub fn random_static_material(rng: &mut rand::rngs::ThreadRng) -> &'static dyn Material {
+    let material_type = random_material_type(rng);
+    match material_type {
+        MaterialType::Lambertian => Box::leak(Box::new(Lambertian {
+            albedo: Color::random(rng),
+        })),
+        MaterialType::Metal => Box::leak(Box::new(Metal {
+            albedo: Color::random(rng),
+        })),
+    }
 }

@@ -24,7 +24,7 @@ impl Sphere {
     }
 
     pub fn random(rng: &mut rand::rngs::ThreadRng) -> Self {
-        let material = &*material::random_material(rng);
+        let material = &*material::random_static_material(rng);
         let center = Point3::random(rng);
         let radius = rng.gen_range(0.0..1.0);
 

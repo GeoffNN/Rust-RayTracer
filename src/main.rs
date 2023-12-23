@@ -33,9 +33,9 @@ fn add_three_balls_on_ground_scene(world: &mut HittableList) {
 fn add_random_balls(world: &mut HittableList, n_balls: usize) {
     let mut rng = rand::thread_rng();
     for _ in 0..n_balls {
-        let a = rng.gen_range(-11..11);
-        let b = rng.gen_range(-11..11);
-        let material = material::random_material(&mut rng);
+        let a = rng.gen_range(-5..5);
+        let b = rng.gen_range(-5..5);
+        let material = material::random_static_material(&mut rng);
         let center = Point3::new(
             a as f64 + 0.9 * rng.gen::<f64>(),
             0.2,
@@ -57,7 +57,7 @@ fn main() {
     add_three_balls_on_ground_scene(&mut world);
     match 1 {
         0 => (),
-        1 => add_random_balls(&mut world, 100),
+        1 => add_random_balls(&mut world, 10),
         _ => todo!("Haven't implemented this variant yet!"),
     };
 
