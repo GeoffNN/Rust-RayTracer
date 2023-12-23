@@ -161,6 +161,19 @@ impl Camera {
         return x * self.pixel_delta_u + y * self.pixel_delta_v;
     }
 
+    fn render_line(&self, world: &dyn Hittable, image_path: &str, row_idx: i32) -> Vec<Color> {
+        let mut row_colors = Vec::new();
+        for x in 0..self.image_width {
+            let mut color = Color::default();
+            for _ in 0..self.num_samples_per_pixel {
+                let ray = self.get_ray(x, row_idx);
+                color += self.ray_color(&ray, world, self.max_depth);
+            }
+            row_colors.push(color);
+        }
+        row_colors
+    }
+
     pub fn render(&mut self, world: &dyn Hittable, image_path: &str) {
         self.initialize();
         // Write to a file
@@ -179,18 +192,7 @@ impl Camera {
         // Collect pixel colors in parallel
         let pixel_colors: Vec<Vec<Color>> = (0..self.image_height)
             .into_par_iter()
-            .map(|y| {
-                let mut row_colors = Vec::new();
-                for x in 0..self.image_width {
-                    let mut color = Color::default();
-                    for _ in 0..self.num_samples_per_pixel {
-                        let ray = self.get_ray(x, y);
-                        color += self.ray_color(&ray, world, self.max_depth);
-                    }
-                    row_colors.push(color);
-                }
-                row_colors
-            })
+            .map(|y| self.render_line(world, &image_path, y))
             .collect();
         // Write pixel colors in the correct order
         for row in pixel_colors {
