@@ -53,6 +53,7 @@ pub fn write_color<W: Write>(
     writeln!(&mut writer, "{} {} {}", r, g, b)
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
     use std::fs::File;

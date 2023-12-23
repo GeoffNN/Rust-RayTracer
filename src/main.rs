@@ -13,8 +13,8 @@ fn three_balls_on_ground_scene() -> HittableList {
         &material::MATERIAL_COPPER,
     )));
     world.add(Box::new(Sphere::new(
-        Point3::new(-0.7, 0., -1.),
-        0.3,
+        Point3::new(-1., 0., -1.),
+        0.5,
         &material::MATERIAL_RED_PLASTIC,
     )));
     world.add(Box::new(Sphere::new(
@@ -31,24 +31,27 @@ fn three_balls_on_ground_scene() -> HittableList {
 }
 
 fn main() {
-    let image_path = "raytracing_level_release_1.ppm";
+    let image_path = "raytracing_level_release_2.ppm";
+
+    // World
+    // TODO(geoff): Take world from a config file
+    let world = three_balls_on_ground_scene();
 
     // Camera
     let mut camera = Camera::default();
     camera.aspect_ratio = 16.0 / 9.0;
     camera.image_width = 400;
+
     camera.num_samples_per_pixel = 100;
     camera.max_depth = 50;
+
     camera.vfov = 20.0;
-    camera.lookfrom = Point3::new(-2., 2., 1.);
+    camera.lookfrom = Point3::new(-20., 20., 10.);
     camera.lookat = Point3::new(0., 0., -1.);
     camera.v_up = Point3::new(0., 1., 0.);
-    camera.defocus_angle = 10.;
-    camera.focus_dist = 3.4;
 
-    // World
-    // TODO(geoff): Take world from a config file
-    let world = three_balls_on_ground_scene();
+    camera.defocus_angle = 0.;
+    camera.focus_dist = 3.4;
 
     camera.render(&world, image_path);
 }

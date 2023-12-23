@@ -37,12 +37,3 @@ impl Interval {
         }
     }
 }
-
-const EMPTY: Interval = Interval {
-    lower: f64::INFINITY,
-    upper: f64::NEG_INFINITY,
-};
-const UNIVERSE: Interval = Interval {
-    lower: f64::NEG_INFINITY,
-    upper: f64::INFINITY,
-};
