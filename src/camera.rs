@@ -109,7 +109,7 @@ impl Camera {
 
     fn sample_from_defocus_disk(&self, rng: &mut rand::rngs::ThreadRng) -> Vec3 {
         let p = Vec3::random_in_unit_disk(rng);
-        return self.center + p.x() * self.defocus_disk_u + p.y() * self.defocus_disk_v;
+        return self.center + (p.x() * self.defocus_disk_u) + (p.y() * self.defocus_disk_v);
     }
 
     fn ray_color(&self, ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
@@ -149,7 +149,7 @@ impl Camera {
             self.sample_from_defocus_disk(rng)
         };
         let ray_direction = pixel_center - ray_origin;
-        let ray = Ray::new(self.center, ray_direction);
+        let ray = Ray::new(ray_origin, ray_direction);
         return ray;
     }
 

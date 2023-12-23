@@ -46,11 +46,11 @@ fn main() {
     camera.max_depth = 50;
 
     camera.vfov = 20.0;
-    camera.lookfrom = Point3::new(-20., 20., 10.);
+    camera.lookfrom = Point3::new(-2., 2., 1.);
     camera.lookat = Point3::new(0., 0., -1.);
     camera.v_up = Point3::new(0., 1., 0.);
 
-    camera.defocus_angle = 0.;
+    camera.defocus_angle = 10.;
     camera.focus_dist = 3.4;
 
     camera.render(&world, image_path);
