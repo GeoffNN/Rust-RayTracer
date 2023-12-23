@@ -6,7 +6,7 @@ use eerdekens_bot::camera::Camera;
 use eerdekens_bot::material;
 
 fn main() {
-    let image_path = "raytracing_level_10.ppm";
+    let image_path = "raytracing_level_12.ppm";
 
     // Camera
     let mut camera = Camera::default();
@@ -14,9 +14,12 @@ fn main() {
     camera.image_width = 400;
     camera.num_samples_per_pixel = 100;
     camera.max_depth = 50;
-    camera.vfov = 90.0;
-    camera.lookfrom = Point3::new(-3., 3., 1.);
+    camera.vfov = 20.0;
+    camera.lookfrom = Point3::new(-2., 2., 1.);
     camera.lookat = Point3::new(0., 0., -1.);
+    camera.v_up = Point3::new(0., 1., 0.);
+    camera.defocus_angle = 10.;
+    camera.focus_dist = 3.4;
 
     // TODO(geoff): Take this from a config file
 

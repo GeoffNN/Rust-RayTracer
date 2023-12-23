@@ -23,6 +23,14 @@ impl Vec3 {
         self.z
     }
 
+    pub fn zeros() -> Vec3 {
+        return Vec3::new(0., 0., 0.);
+    }
+
+    pub fn ones() -> Vec3 {
+        return Vec3::new(1., 1., 1.);
+    }
+
     pub fn close_to_with_tol(self, other: Vec3, tol: f64) -> bool {
         (self - other).length_squared() < tol.powi(2)
     }
@@ -65,6 +73,16 @@ impl Vec3 {
             in_unit_sphere
         } else {
             -in_unit_sphere
+        }
+    }
+
+    pub fn random_in_unit_disk() -> Vec3 {
+        let mut rng = rand::thread_rng();
+        loop {
+            let candidate = Vec3::new(rng.gen_range(-1.0..1.), rng.gen_range(-1.0..1.), 0.);
+            if candidate.length_squared() < 1. {
+                return candidate;
+            }
         }
     }
 

@@ -19,6 +19,8 @@ pub struct Camera {
     pub lookfrom: Point3,
     pub lookat: Point3,
     pub v_up: Vec3,
+    pub defocus_angle: f64,
+    pub focus_dist: f64,
 
     image_height: i32,
     center: Point3,
@@ -29,6 +31,9 @@ pub struct Camera {
     u: Vec3,
     v: Vec3,
     w: Vec3,
+    // Defocus disk horizontal and vertical radii
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
 }
 
 impl Default for Camera {
@@ -43,6 +48,8 @@ impl Default for Camera {
             lookfrom: Point3::new(0.0, 0.0, 0.0),
             lookat: Point3::new(0.0, 0.0, -1.0),
             v_up: Vec3::new(0.0, 1.0, 0.0),
+            defocus_angle: 0.,
+            focus_dist: 10.,
 
             // These will be initialized in initialize
             center: Point3::new(0., 0., 0.),
@@ -53,6 +60,9 @@ impl Default for Camera {
             u: Vec3::new(0., 0., 0.),
             v: Vec3::new(0., 0., 0.),
             w: Vec3::new(0., 0., 0.),
+
+            defocus_disk_u: Vec3::default(),
+            defocus_disk_v: Vec3::default(),
         };
         camera.initialize();
         return camera;
@@ -64,11 +74,10 @@ impl Camera {
         // Camera
 
         self.image_height = ((self.image_width as f64 / self.aspect_ratio) as i32).max(1);
-        let focal_length = (self.lookfrom - self.lookat).length();
 
         let theta = utils::degrees_to_radians(self.vfov);
         let h = (0.5 * theta).tan();
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * self.focus_dist;
         let viewport_width = (self.image_width as f64 / self.image_height as f64) * viewport_height;
 
         self.center = self.lookfrom;
@@ -86,10 +95,21 @@ impl Camera {
 
         // Calculate the location of the upper left pixel.
         let viewport_upper_left_corner =
-            self.center - focal_length * self.w - viewport_u / 2.0 - viewport_v / 2.0;
+            self.center - self.focus_dist * self.w - viewport_u / 2.0 - viewport_v / 2.0;
 
         self.pixel00_location =
             viewport_upper_left_corner + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
+
+        // Calculate the defocus disk radii
+        let defocus_radius =
+            self.focus_dist * utils::degrees_to_radians(self.defocus_angle / 2.).tan();
+        self.defocus_disk_u = self.u * defocus_radius;
+        self.defocus_disk_v = self.v * defocus_radius;
+    }
+
+    fn sample_from_defocus_disk(&self) -> Vec3 {
+        let p = Vec3::random_in_unit_disk();
+        return self.center + p.x() * self.defocus_disk_u + p.y() * self.defocus_disk_v;
     }
 
     fn ray_color(&self, ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
@@ -123,7 +143,12 @@ impl Camera {
             self.pixel00_location + x as f64 * self.pixel_delta_u + y as f64 * self.pixel_delta_v;
 
         pixel_center += self.sample_pixel_from_square();
-        let ray_direction = pixel_center - self.center;
+        let ray_origin = if self.defocus_angle <= 0. {
+            self.center
+        } else {
+            self.sample_from_defocus_disk()
+        };
+        let ray_direction = pixel_center - ray_origin;
         let ray = Ray::new(self.center, ray_direction);
         return ray;
     }
