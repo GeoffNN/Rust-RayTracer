@@ -24,6 +24,10 @@ impl Color {
     pub const fn black() -> Color {
         Self::new_const(0.0, 0.0, 0.0)
     }
+
+    pub const fn white() -> Color {
+        Self::new_const(1.0, 1.0, 1.)
+    }
 }
 
 const INTENSITY_INTERVAL: Interval = Interval {

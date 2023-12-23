@@ -112,7 +112,13 @@ impl Camera {
         return self.center + (p.x() * self.defocus_disk_u) + (p.y() * self.defocus_disk_v);
     }
 
-    fn ray_color(&self, ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
+    fn ray_color(
+        &self,
+        rng: &mut rand::rngs::ThreadRng,
+        ray: &Ray,
+        world: &dyn Hittable,
+        depth: i32,
+    ) -> Color {
         if depth <= 0 {
             // return black
             return Color::new(0.0, 0.0, 0.0);
@@ -122,11 +128,14 @@ impl Camera {
         if world.hit(ray, Interval::new(0.001, f64::INFINITY), &mut hit_record) {
             let mut attenuation = Color::default();
             let mut scattered_ray = Ray::default();
-            if hit_record
-                .material
-                .scatter(ray, &hit_record, &mut attenuation, &mut scattered_ray)
-            {
-                return attenuation * self.ray_color(&scattered_ray, world, depth - 1);
+            if hit_record.material.scatter(
+                rng,
+                ray,
+                &hit_record,
+                &mut attenuation,
+                &mut scattered_ray,
+            ) {
+                return attenuation * self.ray_color(rng, &scattered_ray, world, depth - 1);
             }
             // If no scatter than return black
             return Color::new(0.0, 0.0, 0.0);
@@ -167,7 +176,7 @@ impl Camera {
             let mut color = Color::default();
             for _ in 0..self.num_samples_per_pixel {
                 let ray = self.get_ray(x, row_idx, &mut rng);
-                color += self.ray_color(&ray, world, self.max_depth);
+                color += self.ray_color(&mut rng, &ray, world, self.max_depth);
             }
             row[3 * x..3 * (x + 1)].copy_from_slice(&color.to_array());
         }

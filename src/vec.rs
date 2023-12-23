@@ -40,13 +40,11 @@ impl Vec3 {
         self.close_to_with_tol(other, tol)
     }
 
-    pub fn random() -> Vec3 {
-        let mut rng = rand::thread_rng();
+    pub fn random(rng: &mut rand::rngs::ThreadRng) -> Vec3 {
         Vec3::new(rng.gen(), rng.gen(), rng.gen())
     }
 
-    pub fn random_in_bounds(lower: f64, upper: f64) -> Vec3 {
-        let mut rng = rand::thread_rng();
+    pub fn random_in_bounds(rng: &mut rand::rngs::ThreadRng, lower: f64, upper: f64) -> Vec3 {
         Vec3::new(
             rng.gen_range(lower..upper),
             rng.gen_range(lower..upper),
@@ -54,21 +52,21 @@ impl Vec3 {
         )
     }
 
-    pub fn random_in_unit_ball() -> Vec3 {
+    pub fn random_in_unit_ball(rng: &mut rand::rngs::ThreadRng) -> Vec3 {
         loop {
-            let candidate = Vec3::random_in_bounds(-1., 1.);
+            let candidate = Vec3::random_in_bounds(rng, -1., 1.);
             if candidate.length_squared() < 1. {
                 return candidate;
             }
         }
     }
 
-    pub fn random_unit_vector() -> Vec3 {
-        Vec3::random_in_unit_ball().normalize()
+    pub fn random_unit_vector(rng: &mut rand::rngs::ThreadRng) -> Vec3 {
+        Vec3::random_in_unit_ball(rng).normalize()
     }
 
-    pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-        let in_unit_sphere = Vec3::random_in_unit_ball();
+    pub fn random_in_hemisphere(rng: &mut rand::rngs::ThreadRng, normal: Vec3) -> Vec3 {
+        let in_unit_sphere = Vec3::random_in_unit_ball(rng);
         if in_unit_sphere.dot(&normal) > 0. {
             in_unit_sphere
         } else {

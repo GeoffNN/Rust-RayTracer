@@ -1,8 +1,11 @@
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
+use crate::material;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec::Point3;
+
+use rand::Rng;
 
 pub struct Sphere {
     pub center: Point3,
@@ -17,6 +20,18 @@ impl Sphere {
             center,
             radius,
             material,
+        }
+    }
+
+    pub fn random(rng: &mut rand::rngs::ThreadRng) -> Self {
+        let material = &*material::random_material(rng);
+        let center = Point3::random(rng);
+        let radius = rng.gen_range(0.0..1.0);
+
+        Sphere {
+            center: (center),
+            radius: (radius),
+            material: (material),
         }
     }
 }

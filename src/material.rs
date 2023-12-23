@@ -3,9 +3,12 @@ use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec::Vec3;
 
+use rand::Rng;
+
 pub trait Material: Send + Sync {
     fn scatter(
         &self,
+        rng: &mut rand::rngs::ThreadRng,
         incoming_ray: &Ray,
         rec: &HitRecord,
         attenuation: &mut Color,
@@ -21,12 +24,13 @@ pub struct Lambertian {
 impl Material for Lambertian {
     fn scatter(
         &self,
+        rng: &mut rand::rngs::ThreadRng,
         _incoming_ray: &Ray,
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered_ray: &mut Ray,
     ) -> bool {
-        let mut scatter_direction: Vec3 = rec.normal + Vec3::random_unit_vector();
+        let mut scatter_direction: Vec3 = rec.normal + Vec3::random_unit_vector(rng);
         if scatter_direction.close_to(Vec3::zeros()) {
             scatter_direction = rec.normal;
         }
@@ -45,6 +49,7 @@ pub struct Metal {
 impl Material for Metal {
     fn scatter(
         &self,
+        mut _rng: &mut rand::rngs::ThreadRng,
         incoming_ray: &Ray,
         rec: &HitRecord,
         attenuation: &mut Color,
@@ -59,19 +64,30 @@ impl Material for Metal {
 
 // TODO(geoff): Add dielectric material
 
-pub const MATERIAL_CONCRETE: Lambertian = Lambertian {
+pub static MATERIAL_CONCRETE: Lambertian = Lambertian {
     albedo: Color::new_const(0.5, 0.5, 0.5),
 };
-
-pub const MATERIAL_GROUND: Lambertian = Lambertian {
+pub static MATERIAL_GROUND: Lambertian = Lambertian {
     albedo: Color::new_const(0.8, 0.8, 0.),
 };
-pub const MATERIAL_COPPER: Metal = Metal {
+pub static MATERIAL_COPPER: Metal = Metal {
     albedo: Color::new_const(0.7, 0.5, 0.3),
 };
-pub const MATERIAL_SILVER: Metal = Metal {
+pub static MATERIAL_SILVER: Metal = Metal {
     albedo: Color::new_const(0.9, 0.9, 0.9),
 };
-pub const MATERIAL_RED_PLASTIC: Lambertian = Lambertian {
+pub static MATERIAL_RED_PLASTIC: Lambertian = Lambertian {
     albedo: Color::new_const(0.9, 0.1, 0.1),
 };
+pub static MATERIALS: [&'static dyn Material; 5] = [
+    &MATERIAL_CONCRETE,
+    &MATERIAL_GROUND,
+    &MATERIAL_COPPER,
+    &MATERIAL_SILVER,
+    &MATERIAL_RED_PLASTIC,
+];
+
+pub fn random_material(rng: &mut rand::rngs::ThreadRng) -> &'static dyn Material {
+    let material_index = rng.gen_range(0..MATERIALS.len());
+    MATERIALS[material_index]
+}
