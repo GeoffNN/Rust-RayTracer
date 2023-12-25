@@ -27,12 +27,9 @@ impl Hittable for HittableList {
         let mut record = None;
         for object in &self.objects {
             // A hit updates temp_record
-            match object.hit(ray, Interval::new(ray_t.lower, closest_so_far)) {
-                Some(temp_record) => {
-                    closest_so_far = temp_record.t;
-                    record = Some(temp_record);
-                }
-                None => (),
+            if let Some(temp_record) = object.hit(ray, Interval::new(ray_t.lower, closest_so_far)) {
+                closest_so_far = temp_record.t;
+                record = Some(temp_record);
             }
         }
         return record;

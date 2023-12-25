@@ -123,26 +123,21 @@ impl Camera {
             // return black
             return Color::new(0.0, 0.0, 0.0);
         }
-        // Color using the normal vector
-        match world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
-            Some(hit_record) => {
-                match hit_record.material.scatter(rng, ray, &hit_record) {
-                    Some((attenuation, scattered_ray)) => {
-                        return attenuation * self.ray_color(rng, &scattered_ray, world, depth - 1);
-                    }
-                    None => {
-                        // If no scatter than return black
-                        return Color::new(0.0, 0.0, 0.0);
-                    }
-                }
-            }
 
-            None => {
-                // Background color
-                let unit_direction = ray.direction.normalize();
-                let a = 0.5 * (unit_direction.y + 1.0);
-                return (1. - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0);
+        if let Some(hit_record) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
+            if let Some((attenuation, scattered_ray)) =
+                hit_record.material.scatter(rng, ray, &hit_record)
+            {
+                return attenuation * self.ray_color(rng, &scattered_ray, world, depth - 1);
+            } else {
+                // If no scatter than return black
+                return Color::new(0.0, 0.0, 0.0);
             }
+        } else {
+            // Background color
+            let unit_direction = ray.direction.normalize();
+            let a = 0.5 * (unit_direction.y + 1.0);
+            return (1. - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0);
         }
     }
 
