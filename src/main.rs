@@ -20,7 +20,7 @@ fn add_three_balls_on_ground_scene(world: &mut HittableList) {
     world.add(Box::new(Sphere::new(
         Point3::new(4., 1., 0.),
         1.,
-        &material::MATERIAL_SILVER,
+        &material::MATERIAL_GLASS,
     )));
 
     world.add(Box::new(Sphere::new(
@@ -49,15 +49,15 @@ fn add_random_balls(world: &mut HittableList, n_balls: usize) {
 }
 
 fn main() {
-    let image_path = "raytracing_level_release_3.ppm";
+    let image_path = "raytracing_level_release_Hinata.ppm";
 
     // World
     // TODO(geoff): Take world from a config file
     let mut world = HittableList::new();
     add_three_balls_on_ground_scene(&mut world);
-    match 1 {
+    match 0 {
         0 => (),
-        1 => add_random_balls(&mut world, 10),
+        1 => add_random_balls(&mut world, 100),
         _ => todo!("Haven't implemented this variant yet!"),
     };
 
